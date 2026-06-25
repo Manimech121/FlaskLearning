@@ -1,36 +1,41 @@
-import base64
-
-from flask import Flask,request,jsonify
-import datetime
+from flask import Flask, render_template, request
 import pickle
-import sklearn
+
 app = Flask(__name__)
-@app.route("/")
-def first():
-    return "Hello Mani!,How are doing"
-@app.route("/ping",methods =['GET'])
-def second():
-    return "You are doing Good job"
+
 model = pickle.load(open('classifier.pkl', 'rb'))
+
+@app.route('/')
+def home():
+    return render_template('index.html')
 
 @app.route('/predict', methods=['POST'])
 def predict():
-    input_req = request.get_json()
+    try:
+        gender_input = request.form.get('gender')
+        married_input = request.form.get('married')
+        credit_input = request.form.get('credit_History')
+        applicant_income = float(request.form.get('ApplicantIncome'))
+        loan_amount = float(request.form.get('LoanAmount'))
 
-    gender = 0 if input_req['gender'] == 'Male' else 1
-    married = 0 if input_req['married'] == 'Unmarried' else 1
-    credit_History = 0 if input_req['credit_History'] == 'Unclear Debts' else 1
-    ApplicantIncome = input_req['ApplicantIncome']
-    LoanAmount = input_req['LoanAmount']
+        gender = 0 if gender_input == 'Male' else 1
+        married = 0 if married_input == 'Unmarried' else 1
+        credit_History = 0 if credit_input == 'Unclear Debts' else 1
 
-    features = [[gender, married, ApplicantIncome, LoanAmount, credit_History]]
-    prediction = model.predict(features)[0]
+        features = [[gender, married, applicant_income, loan_amount, credit_History]]
+        prediction = model.predict(features)[0]
 
-    return jsonify({'prediction': int(prediction)})
+        if prediction == 1:
+            result = "Loan Approved"
+            result_class = "approved"
+        else:
+            result = "Loan Rejected"
+            result_class = "rejected"
 
+        return render_template('index.html', prediction_text=result, result_class=result_class)
 
+    except Exception as e:
+        return render_template('index.html', prediction_text=f"Error: {str(e)}", result_class="error")
 
-
-
-
-
+if __name__ == '__main__':
+    app.run(debug=True)
