@@ -38,7 +38,7 @@ def test_predict_approved(client, app_module):
         "married": "Married",
         "credit_History": "Clear Debts",
         "ApplicantIncome": "5000",
-        "LoanAmount": "200"
+        "LoanAmount": "205"
     })
 
     assert response.status_code == 200
